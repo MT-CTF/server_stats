@@ -7,12 +7,7 @@ local timer = 0
 
 -- data cache --
 
-local name_mode = ''
-local matches_mode = ''
-local matches_played_mode = ''
-local name_map = ''
-local technical_name_map = ''
-local start_time_map = ''
+local cache = {}
 
 if table.indexof(minetest.get_dir_list(worldpath, true), "api") == -1 then
 	minetest.log("[server_stats] /api/ folder not found in world dir, aborting...")
@@ -24,14 +19,10 @@ end
 
 local function get_player_list()
 	local player_names = {}
-	local players = minetest.get_connected_players()
-
-	for _, player in ipairs(players) do
-    	local name = player:get_player_name()
-    	table.insert(player_names, name)
+	for _, player in ipairs(minetest.get_connected_players()) do
+    	table.insert(player_names, player:get_player_name())
 	end
-
-	return minetest.write_json(player_names), table.getn(player_names)
+	return player_names, #player_names
 end
 
 local function update(data)
@@ -43,26 +34,23 @@ local function update(data)
 end
 
 ctf_api.register_on_new_match(function()
-
 	local player_names, player_count = get_player_list()
-
-	name_map = ctf_map.current_map.name
-	technical_name_map = ctf_map.current_map.dirname
-	start_time_map = os.time() -- Can be converted to local date here https://www.unixtimestamp.com/
-	name_mode = ctf_modebase.current_mode
-	matches_mode = ctf_modebase.current_mode_matches
-	matches_played_mode = ctf_modebase.current_mode_matches_played
-
+	cache[0] = ctf_modebase.current_mode
+	cache[1] = ctf_modebase.current_mode_matches
+	cache[2] = ctf_modebase.current_mode_matches_played
+	cache[3] = ctf_map.current_map.name
+	cache[4] = ctf_map.current_map.dirname
+	cache[5] = os.time() -- Can be converted to local date here https://www.unixtimestamp.com/
 	update({
 		current_mode = {
-			name = name_mode,
-			matches = matches_mode,
-			matches_played = matches_played_mode,
+			name = cache[0],
+			matches = cache[1],
+			matches_played = cache[2],
 		},
 		current_map = {
-			name = name_map,
-			technical_name = technical_name_map,
-			start_time = start_time_map, 
+			name = cache[3],
+			technical_name = cache[4],
+			start_time = cache[5], 
 		},
 		player_info = {
 			players = player_names,
@@ -79,14 +67,14 @@ minetest.register_globalstep(function(dtime)
 		local player_names, player_count = get_player_list()
         update({
 			current_mode = {
-				name = name_mode,
-				matches = matches_mode,
-				matches_played = matches_played_mode,
+				name = cache[0],
+				matches = cache[1],
+				matches_played = cache[2],
 			},
 			current_map = {
-				name = name_map,
-				technical_name = technical_name_map,
-				start_time = start_time_map, 
+				name = cache[3],
+				technical_name = cache[4],
+				start_time = cache[5], 
 			},
 			player_info = {
 				players = player_names,
