@@ -1,12 +1,6 @@
 local worldpath = minetest.get_worldpath()
 local gamefile = worldpath.."/api/game.json"
 
-local player_update_delay = 30 -- globalsteps
-
-local timer = 0
-
--- data cache --
-
 local cache = {}
 
 if table.indexof(minetest.get_dir_list(worldpath, true), "api") == -1 then
@@ -34,55 +28,35 @@ local function update(data)
 end
 
 ctf_api.register_on_new_match(function()
-	local player_names, player_count = get_player_list()
-	cache[0] = ctf_modebase.current_mode
-	cache[1] = ctf_modebase.current_mode_matches
-	cache[2] = ctf_modebase.current_mode_matches_played
-	cache[3] = ctf_map.current_map.name
-	cache[4] = ctf_map.current_map.dirname
-	cache[5] = os.time() -- Can be converted to local date here https://www.unixtimestamp.com/
-	update({
-		current_mode = {
-			name = cache[0],
-			matches = cache[1],
-			matches_played = cache[2],
-		},
-		current_map = {
-			name = cache[3],
-			technical_name = cache[4],
-			start_time = cache[5], 
-		},
-		player_info = {
-			players = player_names,
-			count = player_count
-		},
-	})
+	cache.current_map = {
+		name = ctf_map.current_map.name,
+		technical_name = ctf_map.current_map.dirname,
+		start_time = os.time(), -- Can be converted to local date here https://www.unixtimestamp.com/
+	}
+	cache.current_mode = {
+		name = ctf_modebase.current_mode,
+		matches = ctf_modebase.current_mode_matches,
+		matches_played = ctf_modebase.current_mode_matches_played,
+	}
+	update(cache)
 end)
 
-minetest.register_globalstep(function(dtime)
-    -- Add the elapsed time to the timer
-    timer = timer + dtime
-    
-    if timer >= player_update_delay then
-		local player_names, player_count = get_player_list()
-        update({
-			current_mode = {
-				name = cache[0],
-				matches = cache[1],
-				matches_played = cache[2],
-			},
-			current_map = {
-				name = cache[3],
-				technical_name = cache[4],
-				start_time = cache[5], 
-			},
-			player_info = {
-				players = player_names,
-				count = player_count
-			},
-		})
-        timer = 0
-    end
+minetest.register_on_joinplayer(function()
+	local player_names, player_count = get_player_list()
+	cache.player_info = {
+		players = player_names,
+		count = player_count
+	}
+    update(cache)
+end)
+
+minetest.register_on_leaveplayer(function()
+	local player_names, player_count = get_player_list()
+	cache.player_info = {
+		players = player_names,
+		count = player_count
+	}
+    update(cache)
 end)
 
 
