@@ -1,12 +1,22 @@
 local worldpath = minetest.get_worldpath()
 local gamefile = worldpath.."/api/game.json"
 
+local cache = {}
+
 if table.indexof(minetest.get_dir_list(worldpath, true), "api") == -1 then
 	minetest.log("[server_stats] /api/ folder not found in world dir, aborting...")
 
 	return -- Comment out when testing
 
 	minetest.mkdir(worldpath.."/api/")
+end
+
+local function get_player_list()
+	local player_names = {}
+	for _, player in ipairs(minetest.get_connected_players()) do
+    	table.insert(player_names, player:get_player_name())
+	end
+	return player_names, #player_names
 end
 
 local function update(data)
@@ -18,16 +28,36 @@ local function update(data)
 end
 
 ctf_api.register_on_new_match(function()
-	update({
-		current_mode = {
-			name = ctf_modebase.current_mode,
-			matches = ctf_modebase.current_mode_matches,
-			matches_played = ctf_modebase.current_mode_matches_played,
-		},
-		current_map = {
-			name = ctf_map.current_map.name,
-			technical_name = ctf_map.current_map.dirname,
-			start_time = os.time(), -- Can be converted to local date here https://www.unixtimestamp.com/
-		},
-	})
+	cache.current_map = {
+		name = ctf_map.current_map.name,
+		technical_name = ctf_map.current_map.dirname,
+		start_time = os.time(), -- Can be converted to local date here https://www.unixtimestamp.com/
+	}
+	cache.current_mode = {
+		name = ctf_modebase.current_mode,
+		matches = ctf_modebase.current_mode_matches,
+		matches_played = ctf_modebase.current_mode_matches_played,
+	}
+	update(cache)
 end)
+
+minetest.register_on_joinplayer(function()
+	local player_names, player_count = get_player_list()
+	cache.player_info = {
+		players = player_names,
+		count = player_count
+	}
+    update(cache)
+end)
+
+minetest.register_on_leaveplayer(function()
+	local player_names, player_count = get_player_list()
+	cache.player_info = {
+		players = player_names,
+		count = player_count
+	}
+    update(cache)
+end)
+
+
+
