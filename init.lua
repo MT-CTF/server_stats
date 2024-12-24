@@ -28,7 +28,7 @@ local function update(data)
 
 	if http then
 		http.fetch_async({
-			url = "http://localhost:5173/api",
+			url = "http://localhost:80/api",
 			timeout = 10,
 			method = "PUT",
 			extra_headers = { "Content-Type: application/json" },
