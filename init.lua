@@ -16,7 +16,9 @@ end
 local function get_player_list()
 	local player_names = {}
 	for _, player in ipairs(minetest.get_connected_players()) do
-		table.insert(player_names, player:get_player_name())
+		if not core.check_player_privs(p, {spectate = true}) then
+			table.insert(player_names, player:get_player_name())
+		end
 	end
 	return player_names, #player_names
 end
