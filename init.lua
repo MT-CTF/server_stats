@@ -1,17 +1,6 @@
-local worldpath = minetest.get_worldpath()
-local gamefile = worldpath .. "/api/game.json"
-
-local http = minetest.request_http_api()
+local OUTFILE = "/tmp/ctf_out"
 
 local cache = {}
-
-if table.indexof(minetest.get_dir_list(worldpath, true), "api") == -1 then
-	minetest.log("[server_stats] /api/ folder not found in world dir, aborting...")
-
-	return -- Comment out when testing
-
-		minetest.mkdir(worldpath .. "/api/")
-end
 
 local function get_player_list()
 	local player_names = {}
@@ -24,21 +13,9 @@ local function get_player_list()
 end
 
 local function update(data)
-	local file = io.open(gamefile, "w")
-
-	file:write(minetest.write_json(data, true))
-
-	if http then
-		http.fetch_async({
-			url = "http://localhost:80/api",
-			timeout = 10,
-			method = "PUT",
-			extra_headers = { "Content-Type: application/json" },
-			data = minetest.write_json(data),
-		})
+	if core.path_exists(OUTFILE) then
+		core.safe_file_write(OUTFILE, minetest.write_json(data, true))
 	end
-
-	file:close()
 end
 
 ctf_api.register_on_new_match(function()
