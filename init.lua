@@ -1,10 +1,10 @@
-local OUTFILE = "/tmp/ctf_out"
+local OUTFILE = core.get_worldpath() .. "/tmp/ctf_out"
 
 local cache = {}
 
 local function get_player_list()
 	local player_names = {}
-	for _, player in ipairs(core.get_connected_players()) do
+	for _, player in ipairs(minetest.get_connected_players()) do
 		if not core.check_player_privs(player, {spectate = true}) then
 			table.insert(player_names, player:get_player_name())
 		end
@@ -12,10 +12,9 @@ local function get_player_list()
 	return player_names, #player_names
 end
 
-local unsafe = core.request_insecure_environment()
 local function update(data)
-	if unsafe.core.path_exists(OUTFILE) then
-		unsafe.core.safe_file_write(OUTFILE, core.write_json(data, true))
+	if core.path_exists(OUTFILE) then
+		core.safe_file_write(OUTFILE, minetest.write_json(data, true))
 	end
 end
 
@@ -33,7 +32,7 @@ ctf_api.register_on_new_match(function()
 	update(cache)
 end)
 
-core.register_on_joinplayer(function()
+minetest.register_on_joinplayer(function()
 	local player_names, player_count = get_player_list()
 	cache.player_info = {
 		players = player_names,
@@ -42,8 +41,8 @@ core.register_on_joinplayer(function()
 	update(cache)
 end)
 
-core.register_on_leaveplayer(function()
-	core.after(0, function()
+minetest.register_on_leaveplayer(function()
+	minetest.after(0, function()
 		local player_names, player_count = get_player_list()
 		cache.player_info = {
 			players = player_names,
@@ -53,7 +52,7 @@ core.register_on_leaveplayer(function()
 	end)
 end)
 
-core.register_on_shutdown(function()
+minetest.register_on_shutdown(function()
 	cache = {
 		error = 1,
 		error_message = "Server has shut down (or is restarting). Try again later",
