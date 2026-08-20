@@ -1,4 +1,4 @@
-local OUTFILE = core.get_worldpath() .. "/tmp/ctf_out"
+local OUTFILE = core.get_worldpath() .. "tmp/ctf_out"
 
 if not core.path_exists(OUTFILE) then
 	core.log("error", "[server_stats] Can't find path " .. OUTFILE)
