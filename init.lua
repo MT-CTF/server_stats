@@ -1,5 +1,9 @@
 local OUTFILE = core.get_worldpath() .. "/tmp/ctf_out"
 
+if not core.path_exists(OUTFILE) then
+	core.log("error", "[server_stats] Can't find path " .. OUTFILE)
+end
+
 local cache = {}
 
 local function get_player_list()
