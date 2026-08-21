@@ -18,12 +18,17 @@ end
 
 local function update(data)
 	if core.path_exists(OUTFILE) then
-		local json = core.write_json(data, true)
+		core.log("action", "[server_stats] Writing to ctf_out pipe...")
 
 		local pipe = io.open(OUTFILE, "w")
+		local json = core.write_json(data)
+
+		core.log("action", "[server_stats] Writing data: " .. json)
 		pipe:write(json)
 		pipe:flush()
 		pipe:close()
+
+		core.log("action", "[server_stats] Write finished")
 	end
 end
 
