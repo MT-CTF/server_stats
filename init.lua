@@ -18,7 +18,12 @@ end
 
 local function update(data)
 	if core.path_exists(OUTFILE) then
-		core.safe_file_write(OUTFILE, minetest.write_json(data, true))
+		local json = core.write_json(data, true)
+
+		local pipe = io.open(OUTFILE, "w")
+		pipe:write(json)
+		pipe:flush()
+		pipe:close()
 	end
 end
 
